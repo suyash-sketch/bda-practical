@@ -1,0 +1,159 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Experiment 1: Hadoop Installation and Configuration Guide</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <p class="eyebrow">Big Data Analytics Practical</p>
+      <h1>Experiment 1: Hadoop Installation and Configuration Guide</h1>
+    </header>
+
+    <section class="phase">
+      <h2>Phase 1: Java Setup</h2>
+      <h3>1. Install Java 11</h3>
+      <p>Enable the universe repository (required on newer Ubuntu versions), update package lists, and install OpenJDK 11:</p>
+      <pre><code>sudo apt install software-properties-common
+sudo add-apt-repository universe
+sudo apt update
+sudo apt install -y openjdk-11-jdk</code></pre>
+
+      <h3>2. Set Java 11 as the active version</h3>
+      <p>Since Java 25 is currently installed, your system defaults to it. Tell Ubuntu to use Java 11 instead:</p>
+      <pre><code>sudo update-alternatives --config java
+java -version</code></pre>
+
+      <h3>3. Set JAVA_HOME for Hadoop</h3>
+      <pre><code>echo 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64' &gt;&gt; ~/.bashrc
+echo 'export PATH=$PATH:$JAVA_HOME/bin' &gt;&gt; ~/.bashrc
+source ~/.bashrc</code></pre>
+    </section>
+
+    <section class="phase">
+      <h2>Phase 2: User and SSH Configuration</h2>
+      <h3>1. Create a Hadoop User:</h3>
+      <pre><code>sudo addgroup hadoop
+sudo adduser --ingroup hadoop hadoopusr
+sudo usermod -aG sudo hadoopusr</code></pre>
+
+      <h3>2. Install SSH and switch user:</h3>
+      <pre><code>sudo apt-get install openssh-server
+su - hadoopusr</code></pre>
+
+      <h3>3. Generate and authorize the SSH key, then verify the connection:</h3>
+      <pre><code>ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+cat ~/.ssh/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+sudo service ssh start
+ssh localhost
+exit</code></pre>
+    </section>
+
+    <section class="phase">
+      <h2>Phase 3: Downloading and Placing Hadoop</h2>
+      <h3>1. Download Hadoop 3.3.6:</h3>
+      <pre><code>cd ~
+wget https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz</code></pre>
+
+      <h3>2. Extract, rename, and move the folder:</h3>
+      <pre><code>tar -xzvf hadoop-3.3.6.tar.gz
+sudo mv /home/hadoopusr/hadoop-3.3.6 /usr/local/hadoop</code></pre>
+
+      <h3>3. Clean up the downloaded archive and change directory ownership:</h3>
+      <pre><code>rm hadoop-3.3.6.tar.gz
+sudo chown -R hadoopusr:hadoop /usr/local/hadoop</code></pre>
+    </section>
+
+    <section class="phase">
+      <h2>Phase 4: Setting Environment Variables</h2>
+      <p>Open your .bashrc file (nano ~/.bashrc) and add the following environment variables:</p>
+      <pre><code>export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+export HADOOP_HOME=/usr/local/hadoop
+export HADOOP_INSTALL=$HADOOP_HOME
+export HADOOP_MAPRED_HOME=$HADOOP_HOME
+export HADOOP_COMMON_HOME=$HADOOP_HOME
+export HADOOP_HDFS_HOME=$HADOOP_HOME
+export YARN_HOME=$HADOOP_HOME
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin</code></pre>
+      <p>Save the file and apply the changes:</p>
+      <pre><code>source ~/.bashrc</code></pre>
+    </section>
+
+    <section class="phase">
+      <h2>Phase 5: Configure Hadoop XML Files</h2>
+      <p>Navigate to the Hadoop configuration directory:</p>
+      <pre><code>cd /usr/local/hadoop/etc/hadoop</code></pre>
+
+      <h3>1. Set JAVA_HOME in hadoop-env.sh (nano hadoop-env.sh):</h3>
+      <pre><code>export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64</code></pre>
+
+      <h3>2. Create HDFS Directories for NameNode and DataNode:</h3>
+      <pre><code>mkdir -p /home/hadoopusr/hdfs/namenode
+mkdir -p /home/hadoopusr/hdfs/datanode</code></pre>
+
+      <h3>3. Configure core-site.xml (nano /usr/local/hadoop/etc/hadoop/core-site.xml):</h3>
+      <pre><code>&lt;configuration&gt;
+  &lt;property&gt;
+    &lt;name&gt;fs.default.name&lt;/name&gt;
+    &lt;value&gt;hdfs://0.0.0.0:9000&lt;/value&gt;
+    &lt;description&gt;The default file system URI&lt;/description&gt;
+  &lt;/property&gt;
+&lt;/configuration&gt;</code></pre>
+
+      <h3>4. Configure hdfs-site.xml (nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml):</h3>
+      <pre><code>&lt;configuration&gt;
+  &lt;property&gt;
+    &lt;name&gt;dfs.replication&lt;/name&gt;
+    &lt;value&gt;1&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;dfs.name.dir&lt;/name&gt;
+    &lt;value&gt;file:///home/hadoopusr/hdfs/namenode&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;dfs.data.dir&lt;/name&gt;
+    &lt;value&gt;file:///home/hadoopusr/hdfs/datanode&lt;/value&gt;
+  &lt;/property&gt;
+&lt;/configuration&gt;</code></pre>
+
+      <h3>5. Configure mapred-site.xml (nano /usr/local/hadoop/etc/hadoop/mapred-site.xml):</h3>
+      <pre><code>&lt;configuration&gt;
+  &lt;property&gt;
+    &lt;name&gt;mapreduce.framework.name&lt;/name&gt;
+    &lt;value&gt;yarn&lt;/value&gt;
+  &lt;/property&gt;
+&lt;/configuration&gt;</code></pre>
+
+      <h3>6. Configure yarn-site.xml (nano /usr/local/hadoop/etc/hadoop/yarn-site.xml):</h3>
+      <pre><code>&lt;configuration&gt;
+  &lt;property&gt;
+    &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;
+    &lt;value&gt;mapreduce_shuffle&lt;/value&gt;
+  &lt;/property&gt;
+&lt;/configuration&gt;</code></pre>
+    </section>
+
+    <section class="phase">
+      <h2>Phase 6: Formatting, Starting, and Managing the Cluster</h2>
+      <h3>1. Format the NameNode (Initialize the file system for the first time):</h3>
+      <pre><code>hdfs namenode -format</code></pre>
+
+      <h3>2. Start Storage Services:</h3>
+      <pre><code>start-dfs.sh
+start-yarn.sh</code></pre>
+
+      <h3>3. Verify Running Daemons:</h3>
+      <pre><code>jps</code></pre>
+
+      <h3>4. View Dashboards:</h3>
+      <p>Access the Hadoop cluster overview via a web browser at: <a href="http://localhost:9870">localhost:9870</a></p>
+      <p>Access YARN cluster application metrics at: <a href="http://localhost:8088">localhost:8088</a></p>
+    </section>
+  </main>
+</body>
+</html>
