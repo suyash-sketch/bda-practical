@@ -234,6 +234,139 @@ if __name__ == "__main__":
     </section>
 
     <section class="phase">
+      <h2>Experiment 5: Installation, setup of MongoDB and perform CRUD operations</h2>
+      <h3>A.1 Aim</h3>
+      <p>To install and configure MongoDB and perform basic CRUD ops</p>
+      <h3>A.2 Prerequisite</h3>
+      <p>Knowledge of DBMS, NOSQL</p>
+      <h3>A.3 Theory</h3>
+      <p>NoSQL</p>
+      <p>“A NoSQL (originally referring to “non SQL” or “non relational”) database provides a mechanism for storage and retrieval of data that is modeled in means other than the tabular relations used in relation databases (RDBMS). It encompasses a wide variety of different database technologies that were developed in response to a rise in the volume of data stored about users, objects and products, the frequency in which this data is accessed, and performance and processing needs. Generally, NoSQL databases are structured in a key-value pair, graph database, document-oriented or column-oriented structure.</p>
+      
+      <h3>Setup and Install MongoDB</h3>
+      <h3>Step 1: Install Docker and setup MongoDB image</h3>
+      <pre><code>services:
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: suyashk1305
+    volumes:
+      - ./data:/data/db
+    restart: unless-stopped
+
+
+  mongo-express:
+    image: mongo-express:1.0.2-20
+    container_name: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL:
+        mongodb://admin:suyashk1305@mongodb:27017/?authSource=admin
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      - mongodb
+    restart: unless-stopped</code></pre>
+
+      <h3>Step 2: Execute the compose file:</h3>
+      <pre><code>docker compose up -d</code></pre>
+
+      <h3>Step 3: Test MongoDB</h3>
+      <pre><code>sudo docker exec -it mongodb mongosh -u admin -p</code></pre>
+
+      <h3>Step 4: Create a new database and use it:</h3>
+      <pre><code>use bda_lab</code></pre>
+
+      <h3>Step 5: Create and insert the first record:</h3>
+      <pre><code>db.students.insertOne({
+  roll: 101,
+  name: "Rahul",
+  branch: "Computer",
+  marks: 85
+})</code></pre>
+
+      <h3>CRUD Operations (MongoDB)</h3>
+      <p>1. Read student with roll no 101:</p>
+      <pre><code>db.students.findOne({roll: 101})</code></pre>
+      <p>2. Update:</p>
+      <pre><code>db.students.updateOne(
+  {roll: 101},
+  {$set: {marks: 90}}
+)</code></pre>
+      <p>3. Delete:</p>
+      <pre><code>db.students.deleteOne({roll: 101})</code></pre>
+    </section>
+
+    <section class="phase">
+      <h2>Experiment 5: Installation, setup of CassandraDB and perform CRUD operations</h2>
+      <h3>A.1 Aim</h3>
+      <p>To install and configure CassandraDB and perform basic CRUD ops</p>
+      <h3>A.2 Prerequisite</h3>
+      <p>Knowledge of DBMS, NOSQL</p>
+      <h3>A.3 Theory</h3>
+      <p>Apache Cassandra is an open-source, distributed NoSQL database designed to store and manage large amounts of data. It uses a wide-column data model and provides high availability and scalability. Cassandra uses CQL (Cassandra Query Language), which is similar to SQL. In this practical, Cassandra is run using Docker, and basic CRUD operations are performed using cqlsh. A keyspace is created to organize data, a table is created to store student records, and INSERT, SELECT, UPDATE, and DELETE commands are used to create, retrieve, modify, and remove records.</p>
+
+      <h3>Setup and Install Cassandra</h3>
+      <h3>Step 1: Install Docker and setup Cassandra image</h3>
+      <pre><code>services:
+  cassandra:
+    image: cassandra:5.0
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./data:/var/lib/cassandra
+    restart: unless-stopped</code></pre>
+
+      <h3>Step 2: Execute the compose file:</h3>
+      <pre><code>docker compose up -d</code></pre>
+
+      <h3>Step 3: Open cqlsh:</h3>
+      <pre><code>sudo docker exec -it cassandra cqlsh</code></pre>
+
+      <h3>Step 4: Verify communication with Cassandra:</h3>
+      <pre><code>DESCRIBE KEYSPACES;</code></pre>
+
+      <h3>Step 5: Create a DB:</h3>
+      <pre><code>CREATE KEYSPACE bda_lab WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1};
+DESCRIBE KEYSPACE bda_lab;</code></pre>
+
+      <h3>Step 6: Use DB:</h3>
+      <pre><code>USE bda_lab;</code></pre>
+
+      <h3>Step 7: Create the students table:</h3>
+      <pre><code>CREATE TABLE students (
+  roll int PRIMARY KEY,
+  name text,
+  branch text,
+  marks int
+);</code></pre>
+
+      <h3>Step 8: Verify:</h3>
+      <pre><code>DESCRIBE TABLE students;</code></pre>
+
+      <h3>Step 9: Insert our first record:</h3>
+      <pre><code>INSERT INTO students (roll, name, branch, marks)
+VALUES (101, 'Rahul', 'Computer', 85);</code></pre>
+
+      <h3>Step 10: Retrieve:</h3>
+      <pre><code>SELECT * FROM students;</code></pre>
+
+      <h3>Step 11: Update the record:</h3>
+      <pre><code>UPDATE students
+SET marks = 90
+WHERE roll = 101;</code></pre>
+
+      <h3>Step 12: Delete the record:</h3>
+      <pre><code>DELETE FROM students
+WHERE roll = 101;</code></pre>
+    </section>
+
+    <section class="phase">
       <h2>Experiment 7: Implement DGIM Algorithm Using Python</h2>
       <h3>A.1 Aim</h3>
       <p>To implement the DGIM algorithm to estimate the number of 1s in a data stream.</p>
