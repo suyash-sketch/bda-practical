@@ -1,19 +1,27 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Experiment 1: Hadoop Installation and Configuration Guide</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <main class="container">
-    <header class="hero">
-      <p class="eyebrow">Big Data Analytics Practical</p>
-      <h1>Experiment 1: Hadoop Installation and Configuration Guide</h1>
-    </header>
-
-    <section class="phase">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDA PRACTICALS</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main class="container">
+      
+      <section class="phase">
+      <h2>Experiment 1: Hadoop Installation and Configuration Guide</h2>
+      <h3>A.1 Aim</h3>
+      <p>The aim of this experiment is to install and configure Hadoop.</p>
+      <h3>A.2 Prerequisite</h3>
+      <p>Knowledge Java, Phython and VMware software pack.</p>
+      <h3>A.3 Theory</h3>
+      <p>Apache Hadoop is an open-source framework used to store and process large amounts of data across multiple computers.
+HDFS (Hadoop Distributed File System) stores data across the cluster. The NameNode manages file metadata, while
+DataNodes store the actual data blocks. Hadoop uses Java and SSH for configuration and communication. After configuring
+Hadoop, the HDFS and YARN services are started and verified using commands such as jps.
+The HDFS and YARN web dashboards help monitor the cluster.
+</p>
       <h2>Phase 1: Java Setup</h2>
       <h3>1. Install Java 11</h3>
       <p>Enable the universe repository (required on newer Ubuntu versions), update package lists, and install OpenJDK 11:</p>
@@ -153,6 +161,167 @@ start-yarn.sh</code></pre>
       <h3>4. View Dashboards:</h3>
       <p>Access the Hadoop cluster overview via a web browser at: <a href="http://localhost:9870">localhost:9870</a></p>
       <p>Access YARN cluster application metrics at: <a href="http://localhost:8088">localhost:8088</a></p>
+    </section>
+
+    <section class="phase">
+      <h2>Experiment 4: Word Count Using MapReduce in Python</h2>
+      <h3>A.1 Aim</h3>
+      <p>To implement a Word Count program using the MapReduce approach in Python.</p>
+      <h3>A.2 Theory</h3>
+      <p>MapReduce is a programming model used to process large amounts of data by dividing the work into smaller tasks.</p>
+      <p>It consists of three main steps:</p>
+      <p>1. Map: Converts each word into a key-value pair (word, 1).</p>
+      <p>2. Shuffle and Sort: Groups together all values belonging to the same word.</p>
+      <p>3. Reduce: Adds the values to calculate the total frequency of each word.</p>
+      <h3>A.3 Algorithm</h3>
+      <p>1. Take a text as input.</p>
+      <p>2. Convert the text to lowercase and split it into words.</p>
+      <p>3. Generate (word, 1) pairs using the mapper.</p>
+      <p>4. Group identical words using shuffle.</p>
+      <p>5. Add their counts using the reducer.</p>
+      <p>6. Display each word with its total count.</p>
+      <pre><code>import re
+from collections import defaultdict
+
+# mapper: convert each word into a key-value pair (word, 1)
+# text : str
+def mapper(text):
+    # use regex to find words, ignoring punctuation and case
+    words = re.findall(r"\b[\w']+\b", text.lower())
+    
+    return [(word, 1) for word in words]
+
+
+# shuffle and sort: group values by each word
+# mapped_data : list[pair[str, int]]
+def shuffle(mapped_data):
+    # grouped_data : dict[str, list[int]]
+    grouped_data = defaultdict(list)
+
+    for word, count in mapped_data:
+        grouped_data[word].append(count)
+ 
+    return grouped_data
+
+
+# reducer: add the counts for each word
+# grouped_data : dict[str, list[int]]
+def reducer(grouped_data):
+    result = {}
+    # dict[str, int]
+    for word, counts in grouped_data.items():
+        result[word] = sum(counts)
+    
+    return result
+
+
+if __name__ == "__main__":
+    
+    text = """
+    Hello World
+    Hello Python
+    World of Python
+    """
+
+
+    mapped_data = mapper(text)
+    grouped_data = shuffle(mapped_data)
+    word_counts = reducer(grouped_data)
+
+    print("Word Counts:")
+    for word, count in sorted(word_counts.items()):
+        print(f"{word}: {count}")</code></pre>
+    </section>
+
+    <section class="phase">
+      <h2>Experiment 7: Implement DGIM Algorithm Using Python</h2>
+      <h3>A.1 Aim</h3>
+      <p>To implement the DGIM algorithm to estimate the number of 1s in a data stream.</p>
+      <h3>A.2 Theory</h3>
+      <p>DGIM (Datar–Gionis–Indyk–Motwani) is an algorithm used to estimate the number of 1s in the last \(N\) bits of a data stream.</p>
+      <p>It uses buckets of sizes that are powers of 2 to reduce memory usage. When more than two buckets have the same size, the two oldest buckets are merged.</p>
+      <p>To estimate the count, the algorithm adds the sizes of the relevant buckets and subtracts half the size of the oldest relevant bucket.</p>
+      <h3>A.3 Algorithm</h3>
+      <p>1. Read each bit from the stream.</p>
+      <p>2. Increase the timestamp for every bit.</p>
+      <p>3. If the bit is 1, create a bucket of size 1.</p>
+      <p>4. If more than two buckets have the same size, merge the two oldest.</p>
+      <p>5. To estimate the number of 1s in the last \(N\) bits, add the relevant bucket sizes and subtract half the oldest bucket's size.</p>
+      <p>6. Display the estimated count.</p>
+      <pre><code>class DGIM:
+    def __init__(self):
+        self.timestamp = 0
+        # duckets are stored newest to oldest
+        self.buckets = []
+
+    def add(self, bit):
+        self.timestamp +=1
+
+        if bit == 1:
+            self.buckets.insert(0, (1, self.timestamp))
+            self.merge_buckets()
+
+
+    def merge_buckets(self):
+
+        while True:
+            size_indices = {}
+
+            for index, (size, _) in enumerate(self.buckets):
+                size_indices.setdefault(size, []).append(index)
+
+            size_to_merge = None
+
+            for size, indices in size_indices.items():
+                if len(indices) &gt; 2:
+                    size_to_merge = size
+                    break
+
+            if size_to_merge is None:
+                break
+
+            # merge the two oldest buckets of this size
+            indices = size_indices[size_to_merge]
+            second_oldest = indices[-2]
+            oldest = indices[-1]
+
+            timestamp = self.buckets[second_oldest][1]
+            self.buckets[second_oldest] = ( size_to_merge * 2, timestamp)
+            self.buckets.pop(oldest)
+
+
+    def count_last(self, n):
+        if n &lt;= 0:
+            return 0
+
+        window_start = max(1, self.timestamp - n + 1)
+
+        # select buckets whose newest bit lies in the window
+        relevant_buckets = [
+            bucket for bucket in self.buckets if bucket[1] &gt;= window_start
+        ]
+
+        if not relevant_buckets:
+            return 0
+
+         # count all buckets,
+         # then subtract half of the oldest relevant bucket to estimate its overlap
+        count = sum( size for size, _ in relevant_buckets)
+        count -= relevant_buckets[-1][0] / 2
+
+        return round(count)
+
+stream = [1, 0, 1, 1, 0, 1, 0, 1, 1, 0]
+
+dgim = DGIM()
+
+for bit in stream:
+    dgim.add(bit)
+
+print("Stream:", stream)
+print("Estimated 1s in last 5 bits:", dgim.count_last(5))
+print("Estimated 1s in last 10 bits:", dgim.count_last(10))
+print("Buckets:", dgim.buckets)</code></pre>
     </section>
   </main>
 </body>
